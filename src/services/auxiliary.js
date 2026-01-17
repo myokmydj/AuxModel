@@ -191,7 +191,11 @@ export class AuxiliaryService {
         promptText = promptText.replace(/\{\{assetCount\}\}/g, String(assetCount));
         promptText = promptText.replace(/\{\{auxHistory\}\}/g, auxHistoryStr);
 
-        return [{ role: 'user', content: promptText }];
+        // OpenAI API 호환성을 위해 system + user 메시지 구조 사용
+        return [
+            { role: 'system', content: 'You are an auxiliary AI assistant that adds asset commands and status displays to roleplay responses. Output ONLY position marker blocks with no additional text.' },
+            { role: 'user', content: promptText }
+        ];
     }
 
     async sendRequest(profileId, messages) {
@@ -210,23 +214,39 @@ export class AuxiliaryService {
             throw new Error('Selected profile has no API configured');
         }
 
-        const maxTokens = this.settings.maxTokens || profile.max_tokens || undefined;
+        // maxTokens: 프로필에 설정된 값이 있으면 그것을 우선, 없으면 확장 설정 사용
+        const maxTokens = profile.max_tokens || this.settings.maxTokens || undefined;
 
-        const response = await ctx.ConnectionManagerRequestService.sendRequest(
-            profile.id,
-            messages,
-            maxTokens,
-            {},
-            {}
-        );
+        console.log(`[${extensionName}] Sending request to profile: ${profile.name || profile.id}, API: ${profile.api}, maxTokens: ${maxTokens}`);
+        console.log(`[${extensionName}] Message content length: ${messages[0]?.content?.length || 0} chars`);
 
-        if (response) {
-            if (typeof response === 'string') return response;
-            if (response.content) return response.content;
-            if (response.message) return response.message;
+        try {
+            const response = await ctx.ConnectionManagerRequestService.sendRequest(
+                profile.id,
+                messages,
+                maxTokens,
+                {},
+                {}
+            );
+
+            if (response) {
+                if (typeof response === 'string') return response;
+                if (response.content) return response.content;
+                if (response.message) return response.message;
+            }
+
+            return null;
+        } catch (error) {
+            // 더 자세한 에러 정보 로깅
+            console.error(`[${extensionName}] API request failed:`, {
+                profile: profile.name || profile.id,
+                api: profile.api,
+                maxTokens: maxTokens,
+                error: error.message,
+                cause: error.cause?.message
+            });
+            throw error;
         }
-
-        return null;
     }
 
     async generate(lastMessage) {
