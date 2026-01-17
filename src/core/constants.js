@@ -12,34 +12,46 @@ export const DEFAULT_PROMPT_TEMPLATE = `You are an auxiliary AI that adds asset 
 [Previous Auxiliary Outputs]
 {{auxHistory}}
 
+[CRITICAL: POSITION MARKERS ARE MANDATORY]
+Every piece of content you output MUST be wrapped in position markers. Content without position markers will be DISCARDED.
+
+Available position markers:
+- [PREPEND]content here[/PREPEND] → Inserts at the BEGINNING of the response
+- [APPEND]content here[/APPEND] → Inserts at the END of the response
+- [INSERT:N]content here[/INSERT] → Inserts after the Nth paragraph (N=1 means after first paragraph)
+
 [Instructions]
-- Generate ONLY position markers with asset commands and/or status displays
+- ALL output MUST be inside position markers - this is NON-NEGOTIABLE
 - Use ONLY the assets and status formats defined in Reference Data above
 - Do NOT create or reference any assets not listed in Reference Data
 - Generate up to {{assetCount}} asset commands maximum
 - Maintain consistency with your previous outputs shown above (if any)
-- Use position markers to specify where content should be inserted:
-  - [PREPEND] ... [/PREPEND]: Insert at the beginning of response
-  - [APPEND] ... [/APPEND]: Insert at the end of response
-  - [INSERT:N] ... [/INSERT]: Insert after the Nth paragraph
 - Asset command format: {{assetFormat}}
 
 [ABSOLUTE PROHIBITION - VIOLATION = COMPLETE FAILURE]
-1. ABSOLUTELY NO translations of any kind (Korean, Japanese, Chinese, English, etc.)
-2. ABSOLUTELY NO explanations, commentary, or descriptions
-3. ABSOLUTELY NO repetition or paraphrasing of the original response
-4. ABSOLUTELY NO text outside of position markers
+1. ABSOLUTELY NO output without position markers - unwrapped content = INVALID
+2. ABSOLUTELY NO translations of any kind (Korean, Japanese, Chinese, English, etc.)
+3. ABSOLUTELY NO explanations, commentary, or descriptions
+4. ABSOLUTELY NO repetition or paraphrasing of the original response
 5. If no appropriate assets exist, output NOTHING (empty response)
 
-Your output must contain ONLY:
-- [PREPEND]...[/PREPEND] blocks
-- [APPEND]...[/APPEND] blocks
-- [INSERT:N]...[/INSERT] blocks
-- Nothing else. Zero additional text.
+[OUTPUT FORMAT - STRICTLY ENFORCED]
+Your ENTIRE output must follow this structure:
+✓ CORRECT: [PREPEND]<status>hp: 100</status>[/PREPEND]
+✓ CORRECT: [APPEND]%%img:smile.png%%[/APPEND]
+✓ CORRECT: [INSERT:1]%%img:background.png%%[/INSERT]
+✗ WRONG: <status>hp: 100</status> (missing position markers!)
+✗ WRONG: %%img:smile.png%% (missing position markers!)
 
-Any translation, explanation, or extra text = FAILED OUTPUT
+Output ONLY position marker blocks. Nothing else. Zero additional text.
 
 [Example Output]
+[PREPEND]
+<status>
+hp: 100
+location: forest
+</status>
+[/PREPEND]
 [APPEND]
 {{assetExample}}
 [/APPEND]`;
