@@ -49,10 +49,14 @@ export class AuxiliaryService {
 
     async getFilteredWorldInfo() {
         const keyword = this.settings.worldInfoKeyword;
-        if (!keyword) return '';
+        if (!keyword) {
+            console.log(`[${extensionName}] No world info keyword configured`);
+            return '';
+        }
 
         try {
             const boundBooks = this.getBoundWorldInfoBooks ? this.getBoundWorldInfoBooks() : [];
+            console.log(`[${extensionName}] Bound books:`, boundBooks);
             if (boundBooks.length === 0) {
                 console.log(`[${extensionName}] No bound world info books for current character/chat`);
                 return '';
@@ -63,15 +67,27 @@ export class AuxiliaryService {
                 console.log(`[${extensionName}] No world info data loaded`);
                 return '';
             }
+            console.log(`[${extensionName}] World info books loaded:`, Object.keys(worldInfoData));
 
             const entries = [];
             const keywordLower = keyword.toLowerCase();
 
             for (const bookName of boundBooks) {
                 const book = worldInfoData[bookName];
-                if (!book?.entries) continue;
+                if (!book?.entries) {
+                    console.log(`[${extensionName}] Book "${bookName}" has no entries or not found in loaded data`);
+                    continue;
+                }
 
-                for (const entry of Object.values(book.entries)) {
+                console.log(`[${extensionName}] Scanning book "${bookName}" with ${Object.keys(book.entries).length} entries`);
+
+                for (const [uid, entry] of Object.entries(book.entries)) {
+                    // ON_DEMAND 엔트리나 비활성화된 엔트리도 키워드 매칭에는 포함
+                    // (disable 체크는 선택적으로 할 수 있음)
+                    if (entry.disable) {
+                        continue; // 비활성화된 엔트리는 스킵
+                    }
+
                     const keys = entry.key || [];
                     const secondaryKeys = entry.keysecondary || [];
                     const allKeys = [...keys, ...secondaryKeys];
@@ -81,14 +97,31 @@ export class AuxiliaryService {
                     );
 
                     if (hasKeyword && entry.content) {
+                        console.log(`[${extensionName}] Matched entry: ${entry.comment || uid} (keys: ${allKeys.join(', ')})`);
+
                         // 매크로 변환 적용 (character-assets 등의 확장 매크로 포함)
                         let processedContent = entry.content;
-                        // evaluateMacros가 있으면 확장 매크로 처리 ({{img_inprompt}} 등)
-                        if (this.evaluateMacros) {
-                            processedContent = this.evaluateMacros(processedContent);
+
+                        try {
+                            // evaluateMacros가 있으면 확장 매크로 처리 ({{img_inprompt}} 등)
+                            if (this.evaluateMacros) {
+                                const evaluated = this.evaluateMacros(processedContent);
+                                if (evaluated !== undefined && evaluated !== null) {
+                                    processedContent = evaluated;
+                                }
+                            }
+                        } catch (macroError) {
+                            console.warn(`[${extensionName}] evaluateMacros error for entry ${uid}:`, macroError);
+                            // 에러 시 원본 content 유지
                         }
-                        // substituteParams로 기본 매크로 처리
-                        processedContent = this.substituteParams(processedContent);
+
+                        try {
+                            // substituteParams로 기본 매크로 처리
+                            processedContent = this.substituteParams(processedContent);
+                        } catch (subError) {
+                            console.warn(`[${extensionName}] substituteParams error for entry ${uid}:`, subError);
+                        }
+
                         entries.push(processedContent);
                     }
                 }

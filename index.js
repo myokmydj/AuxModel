@@ -28,14 +28,28 @@ let isProcessing = false;
 async function getWorldInfoData() {
     const result = {};
 
+    console.log(`[${extensionName}] Loading world info, world_names:`, world_names);
+
     for (const worldName of world_names) {
         try {
-            let data = worldInfoCache.get(worldName);
+            // worldInfoCache는 Map 또는 유사 객체일 수 있음
+            let data = null;
+            if (worldInfoCache) {
+                if (typeof worldInfoCache.get === 'function') {
+                    data = worldInfoCache.get(worldName);
+                } else if (worldInfoCache[worldName]) {
+                    data = worldInfoCache[worldName];
+                }
+            }
+
             if (!data) {
+                console.log(`[${extensionName}] Cache miss for "${worldName}", loading...`);
                 data = await loadWorldInfo(worldName);
             }
+
             if (data) {
                 result[worldName] = data;
+                console.log(`[${extensionName}] Loaded world info "${worldName}" with ${Object.keys(data.entries || {}).length} entries`);
             }
         } catch (error) {
             console.error(`[${extensionName}] Error loading world info "${worldName}":`, error);
@@ -49,19 +63,26 @@ function getBoundWorldInfoBooks() {
     const books = new Set();
 
     try {
+        console.log(`[${extensionName}] getBoundWorldInfoBooks - this_chid:`, this_chid);
+        console.log(`[${extensionName}] getBoundWorldInfoBooks - world_names:`, world_names);
+
         const charaWorld = characters[this_chid]?.data?.extensions?.world;
+        console.log(`[${extensionName}] Character world:`, charaWorld);
         if (charaWorld && world_names.includes(charaWorld)) {
             books.add(charaWorld);
         }
 
         const chatWorld = chat_metadata?.[METADATA_KEY];
+        console.log(`[${extensionName}] Chat world (METADATA_KEY=${METADATA_KEY}):`, chatWorld);
         if (chatWorld && world_names.includes(chatWorld)) {
             books.add(chatWorld);
         }
 
         const fileName = characters[this_chid]?.avatar;
+        console.log(`[${extensionName}] Character avatar filename:`, fileName);
         if (fileName && world_info?.charLore) {
             const extraCharLore = world_info.charLore.find((e) => e.name === fileName);
+            console.log(`[${extensionName}] Extra char lore:`, extraCharLore);
             if (extraCharLore?.extraBooks) {
                 for (const book of extraCharLore.extraBooks) {
                     if (book && world_names.includes(book)) {
@@ -70,6 +91,8 @@ function getBoundWorldInfoBooks() {
                 }
             }
         }
+
+        console.log(`[${extensionName}] Final bound books:`, Array.from(books));
     } catch (error) {
         console.error(`[${extensionName}] Error getting bound world info books:`, error);
     }
