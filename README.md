@@ -106,7 +106,3 @@ UI 업데이트
 - SillyTavern 1.12.0 이상
 - Connection Manager API 지원 필요
 - 모든 OpenAI 호환 API 사용 가능
-
-## 라이선스
-
-MIT License
