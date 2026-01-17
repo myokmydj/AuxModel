@@ -14,7 +14,7 @@ export const defaultSettings = {
     assetFormatId: DEFAULT_ASSET_FORMAT_ID,
     statusFormats: DEFAULT_STATUS_FORMATS,
     assetFormats: DEFAULT_ASSET_FORMATS,
-    maxTokens: 1024,
+    maxTokens: 4096,
     assetCount: 3,
     worldInfoKeyword: DEFAULT_WORLD_INFO_KEYWORD,
     auxHistoryTurns: 2,
