@@ -1,0 +1,496 @@
+<!-- AuxModel 설정 팝업 UI -->
+<div id="auxmodel-popup">
+    <div id="auxmodel-popup-overlay"></div>
+
+    <div class="auxmodel-popup-content">
+        <!-- 헤더 -->
+        <div class="auxmodel-header">
+            <h3><i class="fa-solid fa-magic"></i> AuxModel</h3>
+            <button id="auxmodel-close-btn" title="닫기">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <!-- 탭 네비게이션 -->
+        <div class="auxmodel-tabs">
+            <button class="auxmodel-tab active" data-tab="settings">
+                <i class="fa-solid fa-cog"></i> 설정
+            </button>
+            <button class="auxmodel-tab" data-tab="status">
+                <i class="fa-solid fa-list"></i> 상태창
+            </button>
+            <button class="auxmodel-tab" data-tab="asset">
+                <i class="fa-solid fa-image"></i> 에셋
+            </button>
+            <button class="auxmodel-tab" data-tab="prompt">
+                <i class="fa-solid fa-file-alt"></i> 프롬프트
+            </button>
+            <button class="auxmodel-tab" data-tab="tutorial">
+                <i class="fa-solid fa-graduation-cap"></i> 도움말
+            </button>
+        </div>
+
+        <!-- 탭 콘텐츠 -->
+        <div class="auxmodel-body">
+
+            <!-- ===== 설정 탭 ===== -->
+            <div class="auxmodel-tab-content active" id="tab-settings">
+
+                <!-- 활성화 토글 -->
+                <div class="auxmodel-section">
+                    <div class="auxmodel-toggle-row">
+                        <span class="auxmodel-toggle-label">
+                            확장 활성화
+                            <small class="auxmodel-hint">AI 응답에 보조 모델 콘텐츠를 자동으로 추가합니다</small>
+                        </span>
+                        <label class="auxmodel-toggle">
+                            <input type="checkbox" id="auxmodel-enabled" />
+                            <span class="auxmodel-toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 보조모델 재생성 -->
+                <div class="auxmodel-section">
+                    <div class="auxmodel-regen-section">
+                        <button id="auxmodel-regen-last-btn" class="auxmodel-btn auxmodel-btn-primary auxmodel-btn-full">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> 마지막 메시지 보조모델 재생성
+                        </button>
+                        <small class="auxmodel-hint">마지막 AI 응답의 보조모델 출력만 다시 생성합니다 (본문 유지)</small>
+                    </div>
+                </div>
+
+                <!-- API 설정 -->
+                <div class="auxmodel-section">
+                    <h4><i class="fa-solid fa-plug"></i> API 설정</h4>
+
+                    <div class="auxmodel-input-group">
+                        <label for="auxmodel-profile">Connection Profile</label>
+                        <select id="auxmodel-profile" class="auxmodel-select"></select>
+                        <small class="auxmodel-hint">SillyTavern Connection Manager에서 설정한 프로필을 선택합니다</small>
+                    </div>
+
+                    <div class="auxmodel-input-group">
+                        <label for="auxmodel-max-tokens">Max Tokens</label>
+                        <input type="number" id="auxmodel-max-tokens" min="128" max="8192" value="1024" />
+                        <small class="auxmodel-hint">보조 모델 응답의 최대 토큰 수</small>
+                    </div>
+
+                    <div class="auxmodel-input-group">
+                        <label for="auxmodel-asset-count">에셋 출력 개수</label>
+                        <input type="number" id="auxmodel-asset-count" min="1" max="10" value="3" />
+                        <small class="auxmodel-hint">한 번에 생성할 최대 에셋 커맨드 개수 ({{assetCount}})</small>
+                    </div>
+
+                    <div class="auxmodel-input-group">
+                        <label for="auxmodel-history-turns">히스토리 턴 수</label>
+                        <input type="number" id="auxmodel-history-turns" min="0" max="10" value="2" />
+                        <small class="auxmodel-hint">보조모델에 전달할 이전 보조모델 응답 개수 (0 = 히스토리 없음)</small>
+                    </div>
+                </div>
+
+                <!-- 월드인포 설정 -->
+                <div class="auxmodel-section">
+                    <h4><i class="fa-solid fa-book"></i> 월드인포</h4>
+
+                    <div class="auxmodel-input-group">
+                        <label for="auxmodel-worldinfo-keyword">필터 키워드</label>
+                        <input type="text" id="auxmodel-worldinfo-keyword" placeholder="예: auxmodel" />
+                        <small class="auxmodel-hint">이 키워드가 포함된 월드인포 항목만 {{worldInfo}}에 포함됩니다</small>
+                    </div>
+
+                    <div class="auxmodel-worldinfo-selector">
+                        <div class="auxmodel-worldinfo-header">
+                            <label>바인딩된 월드인포 엔트리</label>
+                            <button id="auxmodel-refresh-worldinfo" class="auxmodel-btn auxmodel-btn-secondary auxmodel-btn-small" title="새로고침">
+                                <i class="fa-solid fa-sync"></i>
+                            </button>
+                        </div>
+                        <small class="auxmodel-hint">선택한 엔트리에 필터 키워드를 자동 추가하고 비활성화합니다</small>
+                        <div id="auxmodel-worldinfo-entries" class="auxmodel-worldinfo-entries">
+                            <div class="auxmodel-worldinfo-empty">캐릭터를 선택하면 바인딩된 월드인포가 표시됩니다</div>
+                        </div>
+                        <div class="auxmodel-worldinfo-actions">
+                            <button id="auxmodel-apply-worldinfo" class="auxmodel-btn auxmodel-btn-primary" disabled>
+                                <i class="fa-solid fa-check"></i> 선택 항목 적용
+                            </button>
+                            <button id="auxmodel-clear-worldinfo" class="auxmodel-btn auxmodel-btn-secondary">
+                                <i class="fa-solid fa-times"></i> 선택 초기화
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ===== 상태창 탭 ===== -->
+            <div class="auxmodel-tab-content" id="tab-status">
+
+                <!-- 설정 범위 선택 -->
+                <div class="auxmodel-section">
+                    <div class="auxmodel-scope-selector">
+                        <button class="auxmodel-scope-btn active" data-scope="global">
+                            <i class="fa-solid fa-globe"></i> 글로벌
+                        </button>
+                        <button class="auxmodel-scope-btn" data-scope="character">
+                            <i class="fa-solid fa-user"></i> 캐릭터별
+                        </button>
+                    </div>
+                    <small class="auxmodel-hint auxmodel-scope-hint">
+                        <span class="auxmodel-scope-hint-global">모든 캐릭터에 공통으로 적용되는 설정입니다</span>
+                        <span class="auxmodel-scope-hint-character" style="display:none;">현재 캐릭터에만 적용되는 설정입니다 (글로벌 설정을 덮어씁니다)</span>
+                    </small>
+                </div>
+
+                <!-- 캐릭터별 설정 활성화 (캐릭터 모드에서만 표시) -->
+                <div class="auxmodel-section auxmodel-character-only" style="display:none;">
+                    <div class="auxmodel-toggle-row">
+                        <span class="auxmodel-toggle-label">
+                            캐릭터별 설정 사용
+                            <small class="auxmodel-hint">활성화하면 이 캐릭터에 대해 별도 상태창 포맷을 사용합니다</small>
+                        </span>
+                        <label class="auxmodel-toggle">
+                            <input type="checkbox" id="auxmodel-status-use-character" />
+                            <span class="auxmodel-toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 상태창 포맷 목록 -->
+                <div class="auxmodel-section">
+                    <h4><i class="fa-solid fa-bars"></i> 상태창 포맷</h4>
+                    <small class="auxmodel-hint">AI 응답에서 추출할 상태창 형식을 정의합니다</small>
+
+                    <div id="auxmodel-status-formats-list" class="auxmodel-formats-list"></div>
+
+                    <div class="auxmodel-format-add">
+                        <input type="text" id="auxmodel-status-start" placeholder="시작 태그" />
+                        <input type="text" id="auxmodel-status-end" placeholder="종료 태그" />
+                        <button id="auxmodel-add-status-format" class="auxmodel-btn auxmodel-btn-secondary">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ===== 에셋 탭 ===== -->
+            <div class="auxmodel-tab-content" id="tab-asset">
+
+                <!-- 설정 범위 선택 -->
+                <div class="auxmodel-section">
+                    <div class="auxmodel-scope-selector">
+                        <button class="auxmodel-scope-btn active" data-scope="global">
+                            <i class="fa-solid fa-globe"></i> 글로벌
+                        </button>
+                        <button class="auxmodel-scope-btn" data-scope="character">
+                            <i class="fa-solid fa-user"></i> 캐릭터별
+                        </button>
+                    </div>
+                    <small class="auxmodel-hint auxmodel-scope-hint">
+                        <span class="auxmodel-scope-hint-global">모든 캐릭터에 공통으로 적용되는 설정입니다</span>
+                        <span class="auxmodel-scope-hint-character" style="display:none;">현재 캐릭터에만 적용되는 설정입니다 (글로벌 설정을 덮어씁니다)</span>
+                    </small>
+                </div>
+
+                <!-- 캐릭터별 설정 활성화 -->
+                <div class="auxmodel-section auxmodel-character-only" style="display:none;">
+                    <div class="auxmodel-toggle-row">
+                        <span class="auxmodel-toggle-label">
+                            캐릭터별 설정 사용
+                            <small class="auxmodel-hint">활성화하면 이 캐릭터에 대해 별도 에셋 포맷을 사용합니다</small>
+                        </span>
+                        <label class="auxmodel-toggle">
+                            <input type="checkbox" id="auxmodel-asset-use-character" />
+                            <span class="auxmodel-toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 에셋 커맨드 포맷 -->
+                <div class="auxmodel-section">
+                    <h4><i class="fa-solid fa-image"></i> 에셋 커맨드 포맷</h4>
+
+                    <div class="auxmodel-input-group">
+                        <label for="auxmodel-asset-format">기본 포맷</label>
+                        <select id="auxmodel-asset-format" class="auxmodel-select"></select>
+                        <small class="auxmodel-hint">AI에게 에셋 명령을 생성할 때 사용할 형식</small>
+                    </div>
+                </div>
+
+                <!-- 커스텀 에셋 포맷 -->
+                <div class="auxmodel-section">
+                    <h4><i class="fa-solid fa-magic"></i> 커스텀 에셋 포맷</h4>
+                    <small class="auxmodel-hint">추가적인 에셋 명령 형식을 정의합니다</small>
+
+                    <div id="auxmodel-asset-formats-list" class="auxmodel-formats-list"></div>
+
+                    <div class="auxmodel-format-add">
+                        <input type="text" id="auxmodel-asset-start" placeholder="시작 태그" />
+                        <input type="text" id="auxmodel-asset-end" placeholder="종료 태그" />
+                        <button id="auxmodel-add-asset-format" class="auxmodel-btn auxmodel-btn-secondary">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ===== 프롬프트 탭 ===== -->
+            <div class="auxmodel-tab-content" id="tab-prompt">
+
+                <!-- 프롬프트 템플릿 -->
+                <div class="auxmodel-section">
+                    <div class="auxmodel-prompt-header">
+                        <h4><i class="fa-solid fa-file-alt"></i> 프롬프트 템플릿</h4>
+                        <button id="auxmodel-reset-prompt" class="auxmodel-btn auxmodel-btn-secondary auxmodel-btn-small" title="기본값으로 초기화">
+                            <i class="fa-solid fa-undo"></i>
+                        </button>
+                    </div>
+
+                    <textarea id="auxmodel-prompt" class="auxmodel-prompt-textarea" rows="15"></textarea>
+
+                    <div class="auxmodel-prompt-variables">
+                        <small class="auxmodel-hint">사용 가능한 변수:</small>
+                        <div class="auxmodel-variable-tags">
+                            <span class="auxmodel-variable-tag">{{worldInfo}}</span>
+                            <span class="auxmodel-variable-tag">{{lastMessage}}</span>
+                            <span class="auxmodel-variable-tag">{{assetFormat}}</span>
+                            <span class="auxmodel-variable-tag">{{assetExample}}</span>
+                            <span class="auxmodel-variable-tag">{{assetCount}}</span>
+                            <span class="auxmodel-variable-tag">{{auxHistory}}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 위치 마커 안내 -->
+                <details class="auxmodel-prompt-help">
+                    <summary>
+                        <i class="fa-solid fa-info-circle"></i>
+                        <span>위치 마커 사용법</span>
+                        <i class="fa-solid fa-chevron-down auxmodel-details-chevron"></i>
+                    </summary>
+                    <div class="auxmodel-prompt-help-content">
+                        <div class="auxmodel-help-item">
+                            <code>[PREPEND]...[/PREPEND]</code>
+                            <span>응답 맨 앞에 삽입</span>
+                        </div>
+                        <div class="auxmodel-help-item">
+                            <code>[APPEND]...[/APPEND]</code>
+                            <span>응답 맨 뒤에 삽입</span>
+                        </div>
+                        <div class="auxmodel-help-item">
+                            <code>[INSERT:N]...[/INSERT]</code>
+                            <span>N번째 문단 뒤에 삽입</span>
+                        </div>
+                    </div>
+                </details>
+
+            </div>
+
+            <!-- ===== 튜토리얼 탭 ===== -->
+            <div class="auxmodel-tab-content" id="tab-tutorial">
+
+                <!-- 소개 -->
+                <div class="auxmodel-section">
+                    <h4><i class="fa-solid fa-star"></i> AuxModel이란?</h4>
+                    <p class="auxmodel-tutorial-text">
+                        AuxModel은 메인 AI 응답에 <strong>보조 모델</strong>이 자동으로 상태창, 이미지 에셋, 선택지 등을 추가해주는 확장입니다.
+                    </p>
+                    <div class="auxmodel-tutorial-highlight">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <span>메인 모델의 창작에 집중하면서, 게임적 요소는 보조 모델이 처리합니다!</span>
+                    </div>
+                </div>
+
+                <!-- 빠른 시작 -->
+                <div class="auxmodel-section">
+                    <h4><i class="fa-solid fa-rocket"></i> 빠른 시작 가이드</h4>
+
+                    <div class="auxmodel-tutorial-steps">
+                        <div class="auxmodel-tutorial-step">
+                            <div class="auxmodel-step-number">1</div>
+                            <div class="auxmodel-step-content">
+                                <strong>Connection Profile 선택</strong>
+                                <p>설정 탭에서 보조 모델로 사용할 API 프로필을 선택하세요. Connection Manager에서 미리 설정해두어야 합니다.</p>
+                            </div>
+                        </div>
+
+                        <div class="auxmodel-tutorial-step">
+                            <div class="auxmodel-step-number">2</div>
+                            <div class="auxmodel-step-content">
+                                <strong>월드인포 준비</strong>
+                                <p>보조 모델에게 전달할 에셋/상태창 정보를 월드인포에 작성하세요. 일반 월드인포처럼 작성하면 됩니다.</p>
+                            </div>
+                        </div>
+
+                        <div class="auxmodel-tutorial-step">
+                            <div class="auxmodel-step-number">3</div>
+                            <div class="auxmodel-step-content">
+                                <strong>월드인포 엔트리 선택 및 적용</strong>
+                                <p>설정 탭 하단의 "바인딩된 월드인포 엔트리"에서 보조 모델 전용으로 사용할 항목을 선택하고 <strong>"선택 항목 적용"</strong>을 누르세요. 자동으로 필터 키워드가 추가되고, 메인 모델에 영향을 주지 않도록 비활성화됩니다.</p>
+                            </div>
+                        </div>
+
+                        <div class="auxmodel-tutorial-step">
+                            <div class="auxmodel-step-number">4</div>
+                            <div class="auxmodel-step-content">
+                                <strong>확장 활성화</strong>
+                                <p>설정 탭 상단의 토글을 켜면 AI 응답마다 자동으로 보조 모델이 동작합니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 월드인포 자동 설정 -->
+                <div class="auxmodel-section">
+                    <h4><i class="fa-solid fa-magic"></i> 월드인포 자동 설정 기능</h4>
+                    <p class="auxmodel-tutorial-text">
+                        월드인포 엔트리를 수동으로 편집할 필요 없이, UI에서 간편하게 설정할 수 있습니다.
+                    </p>
+
+                    <div class="auxmodel-tutorial-feature">
+                        <div class="auxmodel-feature-item">
+                            <div class="auxmodel-feature-icon">
+                                <i class="fa-solid fa-check-square"></i>
+                            </div>
+                            <div class="auxmodel-feature-content">
+                                <strong>엔트리 선택</strong>
+                                <p>캐릭터에 바인딩된 월드인포 중 보조 모델 전용으로 사용할 항목을 체크박스로 선택</p>
+                            </div>
+                        </div>
+
+                        <div class="auxmodel-feature-item">
+                            <div class="auxmodel-feature-icon">
+                                <i class="fa-solid fa-key"></i>
+                            </div>
+                            <div class="auxmodel-feature-content">
+                                <strong>키워드 자동 추가</strong>
+                                <p>선택한 엔트리에 필터 키워드(기본: auxmodel)가 자동으로 추가되어 보조 모델이 참조 가능</p>
+                            </div>
+                        </div>
+
+                        <div class="auxmodel-feature-item">
+                            <div class="auxmodel-feature-icon">
+                                <i class="fa-solid fa-eye-slash"></i>
+                            </div>
+                            <div class="auxmodel-feature-content">
+                                <strong>메인 모델 제외</strong>
+                                <p>선택한 엔트리는 자동 비활성화되어 메인 모델의 응답에 영향을 주지 않음</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="auxmodel-tutorial-highlight">
+                        <i class="fa-solid fa-info-circle"></i>
+                        <span>이미 키워드가 있는 엔트리는 <i class="fa-solid fa-key"></i> 아이콘으로, 비활성화된 엔트리는 <i class="fa-solid fa-ban"></i> 아이콘으로 표시됩니다.</span>
+                    </div>
+                </div>
+
+                <!-- 월드인포 작성법 -->
+                <div class="auxmodel-section">
+                    <h4><i class="fa-solid fa-book"></i> 월드인포 작성 예시</h4>
+                    <p class="auxmodel-tutorial-text">
+                        보조 모델이 사용할 에셋과 상태창 형식을 월드인포에 정의합니다.
+                    </p>
+
+                    <div class="auxmodel-tutorial-code">
+                        <div class="auxmodel-code-header">에셋 목록 예시</div>
+                        <pre class="auxmodel-code-block">[사용 가능한 배경]
+%%img:background_숲%%
+%%img:background_마을%%
+%%img:background_던전%%
+
+[캐릭터 표정]
+%%img:히로인_smile%%
+%%img:히로인_angry%%
+%%img:히로인_sad%%</pre>
+                    </div>
+
+                    <div class="auxmodel-tutorial-code">
+                        <div class="auxmodel-code-header">상태창 형식 예시</div>
+                        <pre class="auxmodel-code-block">[상태창 형식]
+&lt;status&gt;
+hp: 체력
+mp: 마나
+gold: 소지금
+location: 현재 위치
+&lt;/status&gt;</pre>
+                    </div>
+                </div>
+
+                <!-- 위치 마커 -->
+                <div class="auxmodel-section">
+                    <h4><i class="fa-solid fa-map-marker-alt"></i> 위치 마커 이해하기</h4>
+                    <p class="auxmodel-tutorial-text">
+                        보조 모델은 위치 마커를 사용해 콘텐츠를 어디에 삽입할지 지정합니다.
+                    </p>
+
+                    <div class="auxmodel-tutorial-markers">
+                        <div class="auxmodel-marker-item">
+                            <code>[PREPEND]</code>
+                            <span>응답 맨 앞에 삽입 (상태창에 적합)</span>
+                        </div>
+                        <div class="auxmodel-marker-item">
+                            <code>[APPEND]</code>
+                            <span>응답 맨 뒤에 삽입 (선택지에 적합)</span>
+                        </div>
+                        <div class="auxmodel-marker-item">
+                            <code>[INSERT:N]</code>
+                            <span>N번째 문단 뒤에 삽입 (이미지 삽입에 적합)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 팁 -->
+                <div class="auxmodel-section">
+                    <h4><i class="fa-solid fa-wand-magic-sparkles"></i> 유용한 팁</h4>
+
+                    <div class="auxmodel-tutorial-tips">
+                        <div class="auxmodel-tip-item">
+                            <i class="fa-solid fa-redo"></i>
+                            <div>
+                                <strong>재생성</strong>
+                                <p>메시지 호버 시 나타나는 지팡이 버튼으로 보조 모델 출력만 다시 생성할 수 있습니다.</p>
+                            </div>
+                        </div>
+
+                        <div class="auxmodel-tip-item">
+                            <i class="fa-solid fa-edit"></i>
+                            <div>
+                                <strong>편집 유지</strong>
+                                <p>메인 응답을 편집해도 보조 모델 콘텐츠가 자동으로 다시 병합됩니다.</p>
+                            </div>
+                        </div>
+
+                        <div class="auxmodel-tip-item">
+                            <i class="fa-solid fa-user"></i>
+                            <div>
+                                <strong>캐릭터별 설정</strong>
+                                <p>상태창/에셋 탭에서 캐릭터마다 다른 포맷을 지정할 수 있습니다.</p>
+                            </div>
+                        </div>
+
+                        <div class="auxmodel-tip-item">
+                            <i class="fa-solid fa-history"></i>
+                            <div>
+                                <strong>히스토리</strong>
+                                <p>히스토리 턴 수를 설정하면 이전 보조 모델 출력을 참고해 일관성을 유지합니다.</p>
+                            </div>
+                        </div>
+
+                        <div class="auxmodel-tip-item">
+                            <i class="fa-solid fa-lightbulb"></i>
+                            <div>
+                                <strong>포맷 자동 감지</strong>
+                                <p>보조모델에게 출력시키는 월드인포 내 에셋이나 상태창과 관련하여 이미 따로 정규식이 포함되어 있다면, 상태창/에셋 탭에서 별도로 포맷을 설정할 필요가 없습니다. 보조 모델이 월드인포의 형식을 참고해 자동으로 출력한 것을 자동으로 정규식이 파싱합니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
