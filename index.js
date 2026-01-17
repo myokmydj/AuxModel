@@ -10,6 +10,7 @@ import {
     chat_metadata,
 } from '../../../../script.js';
 import { world_names, worldInfoCache, loadWorldInfo, saveWorldInfo, world_info, METADATA_KEY } from '../../../world-info.js';
+import { evaluateMacros } from '../../../macros.js';
 
 import { extensionName, extensionFolderPath } from './src/core/constants.js';
 import { SettingsManager } from './src/core/settings.js';
@@ -172,7 +173,7 @@ function initializeManagers() {
         settingsManager = new SettingsManager(extension_settings, saveSettingsDebounced);
         const settings = settingsManager.initialize();
 
-        auxiliaryService = new AuxiliaryService(getContext, settings, substituteParams, getWorldInfoData, settingsManager, getBoundWorldInfoBooks);
+        auxiliaryService = new AuxiliaryService(getContext, settings, substituteParams, getWorldInfoData, settingsManager, getBoundWorldInfoBooks, evaluateMacros);
         responseMerger = new ResponseMerger();
         settingsPanelUI = new SettingsPanelUI(settingsManager, auxiliaryService, getContext, getBoundWorldInfoEntries, applyWorldInfoModifications);
 

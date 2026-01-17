@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(dir \"C:\\\\Users\\\\user\\\\Documents\\\\ST-Data\\\\default-user\\\\extensions\" /b)",
+      "Bash(findstr:*)",
+      "Bash(dir /b \"C:\\\\Users\\\\user\\\\Documents\\\\ST-Data\\\\default-user\\\\extensions\")"
     ]
   }
 }

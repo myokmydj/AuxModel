@@ -1,13 +1,14 @@
 import { extensionName, ASSET_FORMAT_OPTIONS } from '../core/constants.js';
 
 export class AuxiliaryService {
-    constructor(getContext, settings, substituteParams, getWorldInfoData, settingsManager, getBoundWorldInfoBooks) {
+    constructor(getContext, settings, substituteParams, getWorldInfoData, settingsManager, getBoundWorldInfoBooks, evaluateMacros) {
         this.getContext = getContext;
         this.settings = settings;
         this.substituteParams = substituteParams;
         this.getWorldInfoData = getWorldInfoData;
         this.settingsManager = settingsManager;
         this.getBoundWorldInfoBooks = getBoundWorldInfoBooks;
+        this.evaluateMacros = evaluateMacros;
         this.isGenerating = false;
     }
 
@@ -80,7 +81,15 @@ export class AuxiliaryService {
                     );
 
                     if (hasKeyword && entry.content) {
-                        entries.push(entry.content);
+                        // 매크로 변환 적용 (character-assets 등의 확장 매크로 포함)
+                        let processedContent = entry.content;
+                        // evaluateMacros가 있으면 확장 매크로 처리 ({{img_inprompt}} 등)
+                        if (this.evaluateMacros) {
+                            processedContent = this.evaluateMacros(processedContent);
+                        }
+                        // substituteParams로 기본 매크로 처리
+                        processedContent = this.substituteParams(processedContent);
+                        entries.push(processedContent);
                     }
                 }
             }

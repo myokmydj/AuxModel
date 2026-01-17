@@ -22,12 +22,14 @@ export class ResponseMerger {
         };
 
         let match;
+        let hasMarkers = false;
 
         this.prependRegex.lastIndex = 0;
         while ((match = this.prependRegex.exec(normalizedResponse)) !== null) {
             const content = match[1].trim();
             if (content) {
                 result.prepend.push(content);
+                hasMarkers = true;
             }
         }
 
@@ -36,6 +38,7 @@ export class ResponseMerger {
             const content = match[1].trim();
             if (content) {
                 result.append.push(content);
+                hasMarkers = true;
             }
         }
 
@@ -45,6 +48,16 @@ export class ResponseMerger {
             const content = match[2].trim();
             if (content && !isNaN(position)) {
                 result.inserts.push({ position, content });
+                hasMarkers = true;
+            }
+        }
+
+        // 위치 마커가 없으면 전체 응답을 PREPEND로 처리
+        if (!hasMarkers) {
+            const trimmed = normalizedResponse.trim();
+            if (trimmed) {
+                result.prepend.push(trimmed);
+                console.log(`[${extensionName}] No position markers found, treating entire response as PREPEND`);
             }
         }
 
@@ -53,7 +66,8 @@ export class ResponseMerger {
         console.log(`[${extensionName}] Parsed auxiliary response:`, {
             prependCount: result.prepend.length,
             appendCount: result.append.length,
-            insertCount: result.inserts.length
+            insertCount: result.inserts.length,
+            hadMarkers: hasMarkers
         });
 
         return result;
