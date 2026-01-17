@@ -79,25 +79,25 @@ export class AuxiliaryService {
                     continue;
                 }
 
-                console.log(`[${extensionName}] Scanning book "${bookName}" with ${Object.keys(book.entries).length} entries`);
+                console.log(`[${extensionName}] Scanning book "${bookName}" with ${Object.keys(book.entries).length} entries, looking for keyword "${keyword}"`);
 
                 for (const [uid, entry] of Object.entries(book.entries)) {
-                    // ON_DEMAND 엔트리나 비활성화된 엔트리도 키워드 매칭에는 포함
-                    // (disable 체크는 선택적으로 할 수 있음)
-                    if (entry.disable) {
-                        continue; // 비활성화된 엔트리는 스킵
-                    }
+                    // 보조모델 전용 엔트리는 비활성화(disable)되어 있어도 키워드 매칭에 포함
+                    // (비활성화는 메인 모델에서만 제외하기 위함)
 
                     const keys = entry.key || [];
                     const secondaryKeys = entry.keysecondary || [];
                     const allKeys = [...keys, ...secondaryKeys];
+
+                    // 디버그: 각 엔트리의 키 출력
+                    console.log(`[${extensionName}] Entry ${uid} (${entry.comment || 'no comment'}): keys=[${allKeys.join(', ')}]`);
 
                     const hasKeyword = allKeys.some(k =>
                         k.toLowerCase().includes(keywordLower)
                     );
 
                     if (hasKeyword && entry.content) {
-                        console.log(`[${extensionName}] Matched entry: ${entry.comment || uid} (keys: ${allKeys.join(', ')})`);
+                        console.log(`[${extensionName}] Matched entry: ${entry.comment || uid} (keys: ${allKeys.join(', ')}, disabled: ${!!entry.disable})`);
 
                         // 매크로 변환 적용 (character-assets 등의 확장 매크로 포함)
                         let processedContent = entry.content;
