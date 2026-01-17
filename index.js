@@ -396,6 +396,7 @@ function handleMessageEdited(mesId) {
 
     const editedText = message.mes;
 
+    // 현재 병합된 상태와 동일하면 무시
     const currentMerged = responseMerger.merge(message.extra.auxOriginal, message.extra.auxParsed);
     if (editedText === currentMerged) {
         return;
@@ -403,14 +404,17 @@ function handleMessageEdited(mesId) {
 
     isProcessing = true;
 
-    message.extra.auxOriginal = editedText;
+    // 편집된 텍스트에서 보조모델 콘텐츠를 제거하여 새 원본 추출
+    const extractedOriginal = responseMerger.extractOriginal(editedText, message.extra.auxParsed);
+    message.extra.auxOriginal = extractedOriginal;
 
-    const renderedMessage = responseMerger.merge(editedText, message.extra.auxParsed);
+    // 새 원본에 보조모델 콘텐츠 다시 병합
+    const renderedMessage = responseMerger.merge(extractedOriginal, message.extra.auxParsed);
+    message.mes = renderedMessage;
 
     const mesBlock = $(`.mes[mesid="${mesId}"]`);
     if (mesBlock.length) {
-        const displayMessage = { ...message, mes: renderedMessage };
-        updateMessageBlock(mesId, displayMessage);
+        updateMessageBlock(mesId, message);
     }
 
     console.log(`[${extensionName}] Re-merged auxiliary content after edit for message ${mesId}`);

@@ -74,11 +74,18 @@ export class ResponseMerger {
     }
 
     splitIntoParagraphs(text) {
-        const doubleNewlineSplit = text.split(/\n\n+/);
-        if (doubleNewlineSplit.length > 1) {
-            return { paragraphs: doubleNewlineSplit, separator: '\n\n' };
+        // \n\n (두 줄바꿈)이 있으면 그걸로 분리
+        if (text.includes('\n\n')) {
+            const paragraphs = text.split(/\n\n/);
+            return { paragraphs, separator: '\n\n' };
         }
-        return { paragraphs: text.split(/\n/), separator: '\n' };
+        // \n\n이 없으면 \n (한 줄바꿈)으로 분리
+        if (text.includes('\n')) {
+            const paragraphs = text.split(/\n/);
+            return { paragraphs, separator: '\n' };
+        }
+        // 줄바꿈이 없으면 전체가 하나의 문단
+        return { paragraphs: [text], separator: '\n\n' };
     }
 
     joinParagraphs(paragraphs, separator = '\n\n') {
@@ -90,11 +97,13 @@ export class ResponseMerger {
 
         const { paragraphs, separator } = this.splitIntoParagraphs(originalMessage);
 
+        // INSERT 처리: 높은 위치부터 삽입 (이미 정렬되어 있음)
         for (const insert of parsedAux.inserts) {
-            const idx = Math.min(insert.position, paragraphs.length);
-            if (idx >= 0 && idx <= paragraphs.length) {
-                paragraphs.splice(idx, 0, insert.content);
-            }
+            // position은 "N번째 문단 뒤"를 의미
+            // position 0 = 첫 번째 문단 앞 (prepend처럼)
+            // position 1 = 첫 번째 문단 뒤
+            const idx = Math.min(Math.max(0, insert.position), paragraphs.length);
+            paragraphs.splice(idx, 0, insert.content);
         }
 
         let result = this.joinParagraphs(paragraphs, separator);
@@ -107,6 +116,46 @@ export class ResponseMerger {
         if (parsedAux.append.length > 0) {
             const appendContent = parsedAux.append.join('\n\n');
             result = result + '\n\n' + appendContent;
+        }
+
+        return result;
+    }
+
+    /**
+     * 병합된 메시지에서 보조모델 콘텐츠를 제거하고 원본 추출
+     */
+    extractOriginal(mergedMessage, parsedAux) {
+        if (!parsedAux || !mergedMessage) return mergedMessage;
+
+        let result = mergedMessage;
+
+        // PREPEND 제거 (앞에서부터)
+        for (const prepend of parsedAux.prepend) {
+            const prependWithSep = prepend + '\n\n';
+            if (result.startsWith(prependWithSep)) {
+                result = result.slice(prependWithSep.length);
+            } else if (result.startsWith(prepend)) {
+                result = result.slice(prepend.length).replace(/^\n+/, '');
+            }
+        }
+
+        // APPEND 제거 (뒤에서부터)
+        for (let i = parsedAux.append.length - 1; i >= 0; i--) {
+            const append = parsedAux.append[i];
+            const appendWithSep = '\n\n' + append;
+            if (result.endsWith(appendWithSep)) {
+                result = result.slice(0, -appendWithSep.length);
+            } else if (result.endsWith(append)) {
+                result = result.slice(0, -append.length).replace(/\n+$/, '');
+            }
+        }
+
+        // INSERT 제거 (문단 배열에서)
+        if (parsedAux.inserts.length > 0) {
+            const { paragraphs, separator } = this.splitIntoParagraphs(result);
+            const insertContents = new Set(parsedAux.inserts.map(i => i.content.trim()));
+            const filteredParagraphs = paragraphs.filter(p => !insertContents.has(p.trim()));
+            result = this.joinParagraphs(filteredParagraphs, separator);
         }
 
         return result;
