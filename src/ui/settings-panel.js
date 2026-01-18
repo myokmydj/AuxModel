@@ -227,7 +227,7 @@ export class SettingsPanelUI {
 
     updateScopeUI(tabType) {
         const scope = tabType === 'status' ? this.statusScope : this.assetScope;
-        const container = document.getElementById(`tab-${tabType}`);
+        const container = document.getElementById(`auxmodel-tab-${tabType}`);
         if (!container) return;
 
         container.querySelectorAll('.auxmodel-scope-btn').forEach(btn => {
@@ -602,14 +602,14 @@ export class SettingsPanelUI {
             });
         }
 
-        document.querySelectorAll('#tab-status .auxmodel-scope-btn').forEach(btn => {
+        document.querySelectorAll('#auxmodel-tab-status .auxmodel-scope-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.statusScope = e.currentTarget.dataset.scope;
                 this.updateScopeUI('status');
             });
         });
 
-        document.querySelectorAll('#tab-asset .auxmodel-scope-btn').forEach(btn => {
+        document.querySelectorAll('#auxmodel-tab-asset .auxmodel-scope-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.assetScope = e.currentTarget.dataset.scope;
                 this.updateScopeUI('asset');
@@ -657,7 +657,7 @@ export class SettingsPanelUI {
         });
 
         document.querySelectorAll('#auxmodel-popup .auxmodel-tab-content').forEach(content => {
-            content.classList.toggle('active', content.id === `tab-${tabId}`);
+            content.classList.toggle('active', content.id === `auxmodel-tab-${tabId}`);
         });
     }
 
